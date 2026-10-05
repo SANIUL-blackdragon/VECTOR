@@ -17,3 +17,6 @@ $RECYCLE.BIN/
 # Temp and logs
 *.tmp
 *.log
+
+# gh-issuefix evidence folders (never commit diagnosis write-ups)
+issue-*/
