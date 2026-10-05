@@ -17,7 +17,7 @@ Spec stage. `docs/spec.md` holds the plan. The idea is grilled and recorded in `
 5. A bad file shows an error panel. Never a blank page.
 6. The page logs each step to structured console lines. Agents read the console to drive the viewer and debug diagrams.
 7. Every control carries a stable hook, so agent-browser drives it with no special setup. The picker takes file paths. `window.VECTOR` takes source text.
-8. Past giant diagrams the viewer warns first. It tunes its own node limit from the hardware.
+8. No size caps. Text and edge limits sit past any practical size, so giant diagrams render.
 
 Figure 1 View
 
@@ -26,7 +26,7 @@ flowchart TD
   S([Start])
   A[/Pick a local file/]
   D{File ends with .mmd?}
-  R[Render diagram, warning first past the limit]
+  R[Render diagram]
   N[/Show error panel/]
   P[Pan with drag, zoom with wheel or pinch]
   V[Reset view to fit-to-screen]

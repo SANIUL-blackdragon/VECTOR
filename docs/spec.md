@@ -22,7 +22,7 @@ no install.
 - Works under agent-browser out of the box. Picker, canvas, reset button, and error panel each carry a stable hook for automation.
 - Speaks to agents two ways. The picker takes file paths through automation upload. `window.VECTOR` takes source text, with render, reset, and status calls.
 - Logs the full render story to structured console lines: file picked, render start, render done, and render errors with the failure named. Agents read the console to drive the viewer and to debug broken `.mmd` files.
-- Warns before giant diagrams. The viewer reads the hardware, tunes its own node limit, and asks before rendering past it. Failures land in the error panel either way.
+- Renders without limits. Text and edge caps sit past any practical size, so giant diagrams render. Failures land in the error panel either way.
 
 ## How it holds together, roughly
 
