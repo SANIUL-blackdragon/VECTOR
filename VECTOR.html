@@ -4443,7 +4443,7 @@ globalThis["mermaid"] = globalThis.__esbuild_esm_mermaid_nm["mermaid"].default;
   var picker = document.querySelector('[data-testid="picker"]');
   var state = 'idle';
 
-  mermaid.initialize({ startOnLoad: false });
+  mermaid.initialize({ startOnLoad: false, maxTextSize: 5000000, maxEdges: 500000 });
 
   function setState(next) {
     state = next;
