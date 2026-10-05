@@ -4465,8 +4465,11 @@ globalThis["mermaid"] = globalThis.__esbuild_esm_mermaid_nm["mermaid"].default;
     stage.classList.remove('empty');
   }
 
-  function renderDiagram(source) {
+  async function renderDiagram(source) {
     setState('rendering');
+    canvas.innerHTML = '<p class="working">Rendering diagram, hold on.</p>';
+    stage.classList.remove('empty');
+    await new Promise(function (r) { setTimeout(r, 50); });
     mermaid.render('vector-svg', source).then(function (result) {
       showDiagram(result.svg);
     }).catch(function (err) {
