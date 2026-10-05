@@ -6,7 +6,7 @@ One HTML file that renders `.mmd` diagrams offline. No server. No network. No in
 
 ## Status
 
-Spec stage. `spec.md` holds the plan. The idea is grilled and recorded in `CONTEXT.md` and `docs/adr/`. The viewer file is not in this repo yet.
+Spec stage. `docs/spec.md` holds the plan. The idea is grilled and recorded in `CONTEXT.md` and `docs/adr/`. The viewer file is not in this repo yet.
 
 ## How it will work
 
