@@ -4512,37 +4512,41 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
 </script>
 <script>
 (function () {
-  var stage = document.getElementById('stage');
-  var canvas = document.getElementById('canvas');
-  var panel = document.getElementById('error-panel');
-  var picker = document.querySelector('[data-testid="picker"]');
-  var state = 'idle';
+  'use strict';
 
-  mermaid.initialize({ startOnLoad: false, maxTextSize: 5000000, maxEdges: 500000 });
+  var SVG_ID = 'vector-svg';
+  var PAINT_MS = 50;
 
-  function setState(next) {
-    state = next;
+  function Viewer(stage, canvas, panel) {
+    this.stage = stage;
+    this.canvas = canvas;
+    this.panel = panel;
+    this.state = 'idle';
   }
 
-  function showError(message) {
-    setState('error');
-    canvas.innerHTML = '';
-    stage.classList.add('empty');
-    panel.textContent = message;
-    panel.hidden = false;
-  }
+  Viewer.prototype.setState = function (next) {
+    this.state = next;
+  };
 
-  function showDiagram(svg) {
-    setState('done');
-    panel.hidden = true;
-    panel.textContent = '';
-    canvas.innerHTML = svg;
-    stage.classList.remove('empty');
-    fitView();
-  }
+  Viewer.prototype.fail = function (message) {
+    this.setState('error');
+    this.canvas.innerHTML = '';
+    this.stage.classList.add('empty');
+    this.panel.textContent = message;
+    this.panel.hidden = false;
+  };
 
-  function fitView() {
-    var svg = canvas.querySelector('svg');
+  Viewer.prototype.show = function (svg) {
+    this.setState('done');
+    this.panel.hidden = true;
+    this.panel.textContent = '';
+    this.canvas.innerHTML = svg;
+    this.stage.classList.remove('empty');
+    this.fit();
+  };
+
+  Viewer.prototype.fit = function () {
+    var svg = this.canvas.querySelector('svg');
     if (!svg) {
       return;
     }
@@ -4552,51 +4556,79 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     if (!w || !h) {
       return;
     }
-    var room = stage.getBoundingClientRect();
-    var pad = 64;
-    var s = Math.min((room.width - pad) / w, (room.height - pad) / h);
+    var room = this.stage.getBoundingClientRect();
+    var s = Math.min((room.width - 64) / w, (room.height - 64) / h);
     if (!isFinite(s) || s <= 0) {
       return;
     }
     svg.setAttribute('width', Math.floor(w * s));
     svg.setAttribute('height', Math.floor(h * s));
-  }
+  };
 
-  async function renderDiagram(source) {
-    setState('rendering');
-    canvas.innerHTML = '<div class="working" role="status"><svg viewBox="0 0 400 220" role="img" aria-label="Brewing diagram" id="v-loader"></svg><p>Brewing diagram.</p></div>';
-    mach('v-loader', T.boilerA);
-    stage.classList.remove('empty');
-    await new Promise(function (r) { setTimeout(r, 50); });
-    mermaid.render('vector-svg', source).then(function (result) {
-      showDiagram(result.svg);
-    }).catch(function (err) {
-      showError('Render failed: ' + (err && err.message ? err.message : String(err)));
+  Viewer.prototype.paintWorking = function () {
+    this.canvas.innerHTML = '<div class="working" role="status"><svg viewBox="0 0 400 220" role="img" aria-label="Brewing diagram" id="v-loader"></svg><p>Brewing diagram.</p></div>';
+    try {
+      mach('v-loader', T.boilerA);
+    } catch (err) {
+      this.canvas.innerHTML = '<p class="working" role="status">Rendering diagram, hold on.</p>';
+    }
+    this.stage.classList.remove('empty');
+  };
+
+  Viewer.prototype.read = function (file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        resolve(String(reader.result));
+      };
+      reader.onerror = function () {
+        reject(new Error('Could not read file: "' + file.name + '".'));
+      };
+      reader.readAsText(file);
     });
-  }
+  };
 
-  function onFilePicked(file) {
-    setState('picked');
+  Viewer.prototype.render = async function (source) {
+    this.setState('rendering');
+    this.paintWorking();
+    await new Promise(function (done) {
+      setTimeout(done, PAINT_MS);
+    });
+    try {
+      var result = await mermaid.render(SVG_ID, source);
+      this.show(result.svg);
+    } catch (err) {
+      this.fail('Render failed: ' + (err && err.message ? err.message : String(err)));
+    }
+  };
+
+  Viewer.prototype.pick = async function (file) {
+    this.setState('picked');
     if (!file) {
-      showError('No file picked.');
+      this.fail('No file picked.');
       return;
     }
     if (!/\.mmd$/i.test(file.name)) {
-      showError('Not a diagram file: "' + file.name + '" is not an .mmd file.');
+      this.fail('Not a diagram file: "' + file.name + '" is not an .mmd file.');
       return;
     }
-    var reader = new FileReader();
-    reader.onload = function () {
-      renderDiagram(String(reader.result));
-    };
-    reader.onerror = function () {
-      showError('Could not read file: "' + file.name + '".');
-    };
-    reader.readAsText(file);
-  }
+    try {
+      await this.render(await this.read(file));
+    } catch (err) {
+      this.fail(err.message);
+    }
+  };
 
+  mermaid.initialize({ startOnLoad: false, maxTextSize: 5000000, maxEdges: 500000 });
+
+  var viewer = new Viewer(
+    document.getElementById('stage'),
+    document.getElementById('canvas'),
+    document.getElementById('error-panel')
+  );
+  var picker = document.querySelector('[data-testid="picker"]');
   picker.addEventListener('change', function () {
-    onFilePicked(picker.files && picker.files[0]);
+    viewer.pick(picker.files && picker.files[0]);
   });
 })();
 </script>
