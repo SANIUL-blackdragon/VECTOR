@@ -4468,6 +4468,28 @@ globalThis["mermaid"] = globalThis.__esbuild_esm_mermaid_nm["mermaid"].default;
     panel.textContent = '';
     canvas.innerHTML = svg;
     stage.classList.remove('empty');
+    fitView();
+  }
+
+  function fitView() {
+    var svg = canvas.querySelector('svg');
+    if (!svg) {
+      return;
+    }
+    var box = svg.viewBox.baseVal;
+    var w = (box && box.width) || svg.width.baseVal.value || 0;
+    var h = (box && box.height) || svg.height.baseVal.value || 0;
+    if (!w || !h) {
+      return;
+    }
+    var room = stage.getBoundingClientRect();
+    var pad = 64;
+    var s = Math.min((room.width - pad) / w, (room.height - pad) / h);
+    if (!isFinite(s) || s <= 0) {
+      return;
+    }
+    svg.setAttribute('width', Math.floor(w * s));
+    svg.setAttribute('height', Math.floor(h * s));
   }
 
   async function renderDiagram(source) {
