@@ -1,0 +1,56 @@
+name: ci
+
+on:
+  push:
+    branches: [main, agent-sandbox]
+  pull_request:
+
+jobs:
+  offline:
+    name: offline guarantee
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: no external references in the viewer
+        run: |
+          if grep -nE '<(script|link|img)[^>]*(src|href)="https?:' VECTOR.html; then
+            echo 'FAIL: VECTOR.html loads external resources'
+            exit 1
+          fi
+          if grep -nE '<(script|link|img)[^>]*(src|href)="//' VECTOR.html; then
+            echo 'FAIL: VECTOR.html loads protocol-relative resources'
+            exit 1
+          fi
+          echo 'OK: fully self-contained'
+
+  pin:
+    name: mermaid version pin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: inlined bundle is mermaid 12.1.0
+        run: |
+          if ! grep -q 'version:"12.1.0"' VECTOR.html; then
+            echo 'FAIL: mermaid 12.1.0 marker missing from VECTOR.html'
+            exit 1
+          fi
+          echo 'OK: mermaid 12.1.0'
+
+  contract:
+    name: viewer contract smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: hooks and initialize present
+        run: |
+          for hook in 'data-testid="picker"' 'data-testid="canvas"' 'data-testid="error-panel"'; do
+            if ! grep -q "$hook" VECTOR.html; then
+              echo "FAIL: hook $hook missing"
+              exit 1
+            fi
+          done
+          if ! grep -q 'mermaid.initialize' VECTOR.html; then
+            echo 'FAIL: mermaid.initialize missing'
+            exit 1
+          fi
+          echo 'OK: contract hooks present'
