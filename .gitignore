@@ -20,3 +20,4 @@ $RECYCLE.BIN/
 
 # gh-issuefix evidence folders (never commit diagnosis write-ups)
 issue-*/
+testing/*
