@@ -61,7 +61,7 @@
   }
   #stage {
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
     background-image:
       linear-gradient(rgba(201, 143, 78, 0.08) 1px, transparent 1px),
       linear-gradient(90deg, rgba(201, 143, 78, 0.08) 1px, transparent 1px);
@@ -76,8 +76,25 @@
     color: var(--coffee-dim);
     font-style: italic;
   }
-  #canvas { max-width: none; }
+  #canvas { max-width: none; touch-action: none; }
   #canvas svg { display: block; }
+  #stage.live { cursor: grab; }
+  #stage.dragging { cursor: grabbing; }
+  #stage.dragging #canvas { pointer-events: none; }
+  .zoombar { display: flex; gap: 0.3rem; }
+  .zoombar button {
+    font-family: inherit;
+    background: transparent;
+    color: var(--coffee-accent);
+    border: 1px solid var(--coffee-accent);
+    min-width: 2.2rem;
+    padding: 0.35rem 0.5rem;
+    cursor: pointer;
+  }
+  .zoombar button:hover {
+    background: var(--coffee-accent);
+    color: var(--coffee-bg);
+  }
   #error-panel {
     margin: 1rem;
     padding: 0.8rem 1rem;
@@ -130,6 +147,11 @@
 <header>
   <h1>VECTOR</h1>
   <input type="file" data-testid="picker" accept=".mmd" aria-label="Pick an .mmd file">
+  <span class="zoombar" role="group" aria-label="View controls">
+    <button type="button" data-testid="zoom-out" aria-label="Zoom out">-</button>
+    <button type="button" data-testid="reset-view" aria-label="Reset view">1:1</button>
+    <button type="button" data-testid="zoom-in" aria-label="Zoom in">+</button>
+  </span>
   <span class="hint">Offline viewer. Your file never leaves this machine.</span>
 </header>
 <main id="stage" class="empty">
@@ -4522,6 +4544,10 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     this.canvas = canvas;
     this.panel = panel;
     this.state = 'idle';
+    this.view = { scale: 1, x: 0, y: 0 };
+    this.minScale = 0.1;
+    this.maxScale = 8;
+    this.bindView();
   }
 
   Viewer.prototype.setState = function (next) {
@@ -4532,6 +4558,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     this.setState('error');
     this.canvas.innerHTML = '';
     this.stage.classList.add('empty');
+    this.stage.classList.remove('live');
     this.panel.textContent = message;
     this.panel.hidden = false;
   };
@@ -4542,27 +4569,133 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     this.panel.textContent = '';
     this.canvas.innerHTML = svg;
     this.stage.classList.remove('empty');
-    this.fit();
+    this.stage.classList.add('live');
+    this.resetView();
+  }
+
+  Viewer.prototype.hasDiagram = function () {
+    return !!this.canvas.querySelector('svg');
   };
 
-  Viewer.prototype.fit = function () {
+  Viewer.prototype.applyView = function () {
     var svg = this.canvas.querySelector('svg');
     if (!svg) {
       return;
     }
-    var box = svg.viewBox.baseVal;
-    var w = (box && box.width) || svg.width.baseVal.value || 0;
-    var h = (box && box.height) || svg.height.baseVal.value || 0;
-    if (!w || !h) {
-      return;
-    }
+    svg.style.transformOrigin = '0 0';
+    svg.style.transform = 'translate(' + this.view.x + 'px,' + this.view.y + 'px) scale(' + this.view.scale + ')';
+  };
+
+  Viewer.prototype.resetView = function () {
+    this.view = { scale: 1, x: 0, y: 0 };
+    this.applyView();
+  };
+
+  Viewer.prototype.zoomAt = function (cx, cy, factor) {
+    var v = this.view;
+    var next = Math.min(this.maxScale, Math.max(this.minScale, v.scale * factor));
+    var k = next / v.scale;
+    v.x = cx - (cx - v.x) * k;
+    v.y = cy - (cy - v.y) * k;
+    v.scale = next;
+    this.applyView();
+  };
+
+  Viewer.prototype.zoomCenter = function (factor) {
     var room = this.stage.getBoundingClientRect();
-    var s = Math.min((room.width - 64) / w, (room.height - 64) / h);
-    if (!isFinite(s) || s <= 0) {
-      return;
+    this.zoomAt(room.width / 2, room.height / 2, factor);
+  };
+
+  Viewer.prototype.bindView = function () {
+    var self = this;
+    var pointers = {};
+    var pinchGap = 0;
+
+    function stagePoint(e) {
+      var room = self.stage.getBoundingClientRect();
+      return { x: e.clientX - room.left, y: e.clientY - room.top };
     }
-    svg.setAttribute('width', Math.floor(w * s));
-    svg.setAttribute('height', Math.floor(h * s));
+
+    this.stage.addEventListener('wheel', function (e) {
+      if (!self.hasDiagram()) {
+        return;
+      }
+      e.preventDefault();
+      var p = stagePoint(e);
+      self.zoomAt(p.x, p.y, e.deltaY < 0 ? 1.15 : 1 / 1.15);
+    }, { passive: false });
+
+    this.stage.addEventListener('pointerdown', function (e) {
+      if (!self.hasDiagram() || (e.button !== undefined && e.button !== 0)) {
+        return;
+      }
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      if (Object.keys(pointers).length === 2) {
+        var ids = Object.keys(pointers);
+        pinchGap = Math.hypot(
+          pointers[ids[0]].x - pointers[ids[1]].x,
+          pointers[ids[0]].y - pointers[ids[1]].y
+        );
+      }
+      self.stage.classList.add('dragging');
+      try {
+        self.stage.setPointerCapture(e.pointerId);
+      } catch (capErr) {
+        /* touch browsers without capture keep working */
+      }
+    });
+
+    this.stage.addEventListener('pointermove', function (e) {
+      if (!pointers[e.pointerId]) {
+        return;
+      }
+      var prev = pointers[e.pointerId];
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      var ids = Object.keys(pointers);
+      if (ids.length === 2) {
+        var gap = Math.hypot(
+          pointers[ids[0]].x - pointers[ids[1]].x,
+          pointers[ids[0]].y - pointers[ids[1]].y
+        );
+        if (pinchGap > 0) {
+          var room = self.stage.getBoundingClientRect();
+          var mx = (pointers[ids[0]].x + pointers[ids[1]].x) / 2 - room.left;
+          var my = (pointers[ids[0]].y + pointers[ids[1]].y) / 2 - room.top;
+          self.zoomAt(mx, my, gap / pinchGap);
+        }
+        pinchGap = gap;
+        return;
+      }
+      self.view.x += e.clientX - prev.x;
+      self.view.y += e.clientY - prev.y;
+      self.applyView();
+    });
+
+    function release(e) {
+      delete pointers[e.pointerId];
+      pinchGap = 0;
+      if (Object.keys(pointers).length === 0) {
+        self.stage.classList.remove('dragging');
+      }
+    }
+    this.stage.addEventListener('pointerup', release);
+    this.stage.addEventListener('pointercancel', release);
+
+    document.querySelector('[data-testid="zoom-in"]').addEventListener('click', function () {
+      if (self.hasDiagram()) {
+        self.zoomCenter(1.25);
+      }
+    });
+    document.querySelector('[data-testid="zoom-out"]').addEventListener('click', function () {
+      if (self.hasDiagram()) {
+        self.zoomCenter(0.8);
+      }
+    });
+    document.querySelector('[data-testid="reset-view"]').addEventListener('click', function () {
+      if (self.hasDiagram()) {
+        self.resetView();
+      }
+    });
   };
 
   Viewer.prototype.paintWorking = function () {
