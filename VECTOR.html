@@ -149,7 +149,7 @@
   <input type="file" data-testid="picker" accept=".mmd" aria-label="Pick an .mmd file">
   <span class="zoombar" role="group" aria-label="View controls">
     <button type="button" data-testid="zoom-out" aria-label="Zoom out">-</button>
-    <button type="button" data-testid="reset-view" aria-label="Reset view">1:1</button>
+    <button type="button" data-testid="reset-view" aria-label="Reset view">Fit</button>
     <button type="button" data-testid="zoom-in" aria-label="Zoom in">+</button>
   </span>
   <span class="hint">Offline viewer. Your file never leaves this machine.</span>
@@ -4587,7 +4587,18 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
   };
 
   Viewer.prototype.resetView = function () {
-    this.view = { scale: 1, x: 0, y: 0 };
+    var svg = this.canvas.querySelector('svg');
+    var w = 0;
+    if (svg) {
+      var box = svg.viewBox.baseVal;
+      w = (box && box.width) || svg.width.baseVal.value || 0;
+    }
+    var scale = 1;
+    if (w > 0) {
+      var room = this.stage.getBoundingClientRect();
+      scale = Math.min(2, Math.max(this.minScale, (room.width - 64) / w));
+    }
+    this.view = { scale: scale, x: 0, y: 0 };
     this.applyView();
   };
 

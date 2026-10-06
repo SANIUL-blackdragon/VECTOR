@@ -12,8 +12,8 @@ Spec stage. `docs/spec.md` holds the plan. The idea is grilled and recorded in `
 
 1. Open `VECTOR.html` in Chrome. It works with the network off.
 2. Pick any local `.mmd` file.
-3. The diagram opens at 100 percent, text readable. Drag to roam. Use the wheel or pinch to zoom, or the header buttons.
-4. Reset returns to 100 percent at origin.
+3. The diagram opens fitted to the stage width, text readable. Drag to roam. Use the wheel or pinch to zoom, or the header buttons.
+4. Reset returns to the fitted default at origin.
 5. A bad file shows an error panel. Never a blank page.
 6. The page logs each step to structured console lines. Agents read the console to drive the viewer and debug diagrams.
 7. Every control carries a stable hook, so agent-browser drives it with no special setup. The picker takes file paths. `window.VECTOR` takes source text.
@@ -29,7 +29,7 @@ flowchart TD
   R[Render diagram]
   N[/Show error panel/]
   P[Pan with drag, zoom with wheel or pinch]
-  V[Reset view to 100 percent]
+  V[Reset view to fitted default]
   E([End])
   S --> A
   A --> D
