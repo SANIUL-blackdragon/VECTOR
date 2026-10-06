@@ -83,6 +83,36 @@
     white-space: pre-wrap;
   }
   #error-panel[hidden] { display: none; }
+  .working {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--coffee-dim);
+    font-style: italic;
+  }
+  .working svg { width: min(320px, 60vw); }
+  .working .v-node { fill: none; stroke: var(--coffee-accent); stroke-width: 2; }
+  .working .v-edge {
+    fill: none;
+    stroke: var(--coffee-accent);
+    stroke-width: 2;
+    stroke-dasharray: 8 6;
+    animation: v-edge 1s linear infinite;
+  }
+  .working .v-arrow { fill: none; stroke: var(--support-teal); stroke-width: 2; }
+  .working .v-drop {
+    fill: var(--support-teal);
+    animation: v-slide 1.6s ease-in-out infinite;
+  }
+  @keyframes v-edge { to { stroke-dashoffset: -14; } }
+  @keyframes v-slide {
+    0% { transform: translateX(64px); }
+    100% { transform: translateX(208px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .working .v-edge, .working .v-drop { animation: none; }
+  }
   footer {
     padding: 0.4rem 1rem;
     color: var(--coffee-dim);
@@ -4467,7 +4497,7 @@ globalThis["mermaid"] = globalThis.__esbuild_esm_mermaid_nm["mermaid"].default;
 
   async function renderDiagram(source) {
     setState('rendering');
-    canvas.innerHTML = '<p class="working">Rendering diagram, hold on.</p>';
+    canvas.innerHTML = '<div class="working" role="status"><svg viewBox="0 0 300 64" aria-hidden="true"><rect class="v-node" x="8" y="18" width="52" height="28" rx="3"/><path class="v-edge" d="M60 32 C 110 32, 160 32, 208 32"/><path class="v-arrow" d="M208 32 l-14 -7 M208 32 l-14 7"/><rect class="v-node" x="232" y="18" width="52" height="28" rx="3"/><circle class="v-drop" cx="0" cy="32" r="5"/></svg><p>Brewing diagram.</p></div>';
     stage.classList.remove('empty');
     await new Promise(function (r) { setTimeout(r, 50); });
     mermaid.render('vector-svg', source).then(function (result) {
