@@ -4570,7 +4570,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     this.canvas.innerHTML = svg;
     this.stage.classList.remove('empty');
     this.stage.classList.add('live');
-    this.resetView();
+    this.defaultView();
   }
 
   Viewer.prototype.hasDiagram = function () {
@@ -4587,29 +4587,146 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
   };
 
   Viewer.prototype.resetView = function () {
+    return this.defaultView();
+  };
+
+  Viewer.prototype.getBase = function () {
+    var room = this.stage.getBoundingClientRect();
+    var box = this.canvas.getBoundingClientRect();
+    return { x: box.left - room.left, y: box.top - room.top };
+  };
+
+  Viewer.prototype.getPad = function () {
+    var x = 32, y = 32;
+    try {
+      var cs = window.getComputedStyle(this.stage);
+      var pl = parseFloat(cs.paddingLeft);
+      var pt = parseFloat(cs.paddingTop);
+      if (isFinite(pl)) { x = pl; }
+      if (isFinite(pt)) { y = pt; }
+    } catch (padErr) {
+    }
+    return { x: x, y: y };
+  };
+
+  Viewer.prototype.measureMedianText = function () {
+    var nodes = this.canvas.querySelectorAll('text');
+    var heights = [];
+    for (var i = 0; i < nodes.length && heights.length < 60; i++) {
+      var r = nodes[i].getBoundingClientRect();
+      if (r && r.height > 0 && r.width > 0) {
+        heights.push(r.height);
+      }
+    }
+    if (!heights.length) {
+      return 0;
+    }
+    heights.sort(function (a, b) { return a - b; });
+    var mid = Math.floor(heights.length / 2);
+    if (heights.length % 2 === 1) {
+      return heights[mid];
+    }
+    return (heights[mid - 1] + heights[mid]) / 2;
+  };
+
+  Viewer.prototype.defaultView = function () {
     var svg = this.canvas.querySelector('svg');
-    var w = 0;
-    if (svg) {
-      var box = svg.viewBox.baseVal;
-      w = (box && box.width) || svg.width.baseVal.value || 0;
+    if (!svg) {
+      return;
     }
+    svg.style.transform = 'none';
+    var median = this.measureMedianText();
     var scale = 1;
-    if (w > 0) {
-      var room = this.stage.getBoundingClientRect();
-      scale = Math.min(2, Math.max(this.minScale, (room.width - 64) / w));
+    if (median > 0) {
+      scale = 15 / median;
     }
-    this.view = { scale: scale, x: 0, y: 0 };
+    scale = Math.min(this.maxScale, Math.max(this.minScale, scale));
+    var base = this.getBase();
+    var pad = this.getPad();
+    this.view = { scale: scale, x: pad.x - base.x, y: pad.y - base.y };
     this.applyView();
+    this.clampPan();
+  };
+
+  Viewer.prototype.fitView = function () {
+    var svg = this.canvas.querySelector('svg');
+    if (!svg) {
+      return;
+    }
+    svg.style.transform = 'none';
+    var r = svg.getBoundingClientRect();
+    var w = r.width, h = r.height;
+    if (!(w > 0) || !(h > 0)) {
+      var box = svg.viewBox && svg.viewBox.baseVal;
+      w = (box && box.width) || (svg.width && svg.width.baseVal && svg.width.baseVal.value) || 0;
+      h = (box && box.height) || (svg.height && svg.height.baseVal && svg.height.baseVal.value) || 0;
+    }
+    if (!(w > 0) || !(h > 0)) {
+      return this.defaultView();
+    }
+    var room = this.stage.getBoundingClientRect();
+    var pad = this.getPad();
+    var availW = room.width - pad.x * 2;
+    var availH = room.height - pad.y * 2;
+    if (!(availW > 0) || !(availH > 0)) {
+      return this.defaultView();
+    }
+    var scale = Math.min(availW / w, availH / h);
+    scale = Math.min(this.maxScale, Math.max(this.minScale, scale));
+    var base = this.getBase();
+    this.view = {
+      scale: scale,
+      x: (room.width - w * scale) / 2 - base.x,
+      y: (room.height - h * scale) / 2 - base.y
+    };
+    this.applyView();
+  };
+
+  Viewer.prototype.clampPan = function () {
+    var svg = this.canvas.querySelector('svg');
+    if (!svg) {
+      return;
+    }
+    var room = this.stage.getBoundingClientRect();
+    var vis = svg.getBoundingClientRect();
+    if (!(vis.width > 0) || !(vis.height > 0)) {
+      return;
+    }
+    var keepX = Math.min(80, vis.width / 2);
+    var keepY = Math.min(80, vis.height / 2);
+    var dx = 0, dy = 0;
+    if (vis.right < room.left + keepX) {
+      dx = room.left + keepX - vis.right;
+    } else if (vis.left > room.right - keepX) {
+      dx = room.right - keepX - vis.left;
+    }
+    if (vis.bottom < room.top + keepY) {
+      dy = room.top + keepY - vis.bottom;
+    } else if (vis.top > room.bottom - keepY) {
+      dy = room.bottom - keepY - vis.top;
+    }
+    if (dx !== 0 || dy !== 0) {
+      this.view.x += dx;
+      this.view.y += dy;
+      this.applyView();
+    }
   };
 
   Viewer.prototype.zoomAt = function (cx, cy, factor) {
     var v = this.view;
     var next = Math.min(this.maxScale, Math.max(this.minScale, v.scale * factor));
+    if (next === v.scale) {
+      return;
+    }
     var k = next / v.scale;
-    v.x = cx - (cx - v.x) * k;
-    v.y = cy - (cy - v.y) * k;
+    var base = this.getBase();
+    var bx = cx - base.x;
+    var by = cy - base.y;
+    v.x = bx - (bx - v.x) * k;
+    v.y = by - (by - v.y) * k;
     v.scale = next;
     this.applyView();
+    this.clampPan();
   };
 
   Viewer.prototype.zoomCenter = function (factor) {
@@ -4680,6 +4797,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
       self.view.x += e.clientX - prev.x;
       self.view.y += e.clientY - prev.y;
       self.applyView();
+      self.clampPan();
     });
 
     function release(e) {
@@ -4704,7 +4822,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     });
     document.querySelector('[data-testid="reset-view"]').addEventListener('click', function () {
       if (self.hasDiagram()) {
-        self.resetView();
+        self.fitView();
       }
     });
   };
