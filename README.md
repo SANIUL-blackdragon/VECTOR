@@ -1,11 +1,11 @@
 # VECTOR
 
-[![version](https://shields.io)](https://github.com)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](package.json)
 [![ci](https://github.com/SANIUL-blackdragon/VECTOR/actions/workflows/ci.yml/badge.svg)](https://github.com/SANIUL-blackdragon/VECTOR/actions)
 [![demo](https://img.shields.io/badge/try_it-live_demo-brightgreen)](https://saniul-blackdragon.github.io/VECTOR/VECTOR.html)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![issues](https://img.shields.io/github/issues/SANIUL-blackdragon/VECTOR)](https://github.com/SANIUL-blackdragon/VECTOR/issues)
-[![npm](https://img.shields.io/badge/npm-coming_soon-orange)](package.json)
+[![npm](https://img.shields.io/npm/v/%40blackdragon-tech%2Fvector?logo=npm)](https://www.npmjs.com/package/@blackdragon-tech/vector)
 [![stars](https://img.shields.io/github/stars/SANIUL-blackdragon/VECTOR?style=social)](https://github.com/SANIUL-blackdragon/VECTOR)
 
 ![VECTOR logo](assets/images/logo/logo.png)
