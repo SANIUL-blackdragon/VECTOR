@@ -36,7 +36,7 @@ Write detailed commit messages. Use conventional commits for the title, for exam
 
 ## Product state
 
-The solo Viewer works. A human opens `VECTOR.html`, picks a file, pans and zooms. The solo Viewer, the agent contract, and the Backend exist. Still missing: the agent-browser acceptance suite. Build it per the open issues below.
+The solo Viewer works. A human opens `VECTOR.html`, picks a file, pans and zooms. The solo Viewer, the agent contract, the Backend, and the acceptance suite exist. Remaining: giant render performance.
 
 ## Open issues
 
@@ -81,7 +81,7 @@ CI runs three jobs on `main` and `agent-sandbox`: offline guarantee with no exte
 
 ## Agent contract
 
-Every console line starts `[VECTOR] event=<name>` with `key=value` pairs after it. Locked names: `file-picked`, `file-read`, `file-rejected`, `render-start`, `render-done`, `render-failed`, `view-default`, `view-fit`, `error-shown`, `api-render`, `api-reset`, `api-status`, `fullscreen`. `window.VECTOR` carries three calls: `render` takes source text and returns the render promise, `reset` returns the readable default and returns status, `status` returns state, diagram presence, scale, position, and file. Stable hooks cover picker, canvas, all eleven buttons, readout, and error panel.
+Every console line starts `[VECTOR] event=<name>` with `key=value` pairs after it. Locked names: `file-picked`, `file-read`, `file-rejected`, `render-start`, `render-done`, `render-failed`, `view-default`, `view-fit`, `error-shown`, `warn-shown`, `warn-proceed`, `warn-cancel`, `api-render`, `api-reset`, `api-status`, `fullscreen`. Sources over 50000 chars pause on a warn panel with proceed and cancel hooks before rendering. `window.VECTOR` carries three calls: `render` takes source text and returns the render promise, `reset` returns the readable default and returns status, `status` returns state, diagram presence, scale, position, and file. Stable hooks cover picker, canvas, all eleven buttons, readout, warn panel, and error panel. The suite lives in `tests/agent/suite.js` with fixtures in `tests/fixtures`, headless on isolated sessions, run with `node tests/agent/suite.js`.
 
 ## Verification lessons
 
