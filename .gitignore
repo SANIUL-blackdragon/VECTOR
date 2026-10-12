@@ -21,3 +21,6 @@ $RECYCLE.BIN/
 # gh-issuefix evidence folders (never commit diagnosis write-ups)
 issue-*/
 testing/*
+
+# Local copies of global agent skills (never commit, refresh from ~/.agents/skills)
+.skills/
