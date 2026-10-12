@@ -57,17 +57,15 @@ The last line must print `v18` or later. Nothing else installs. The viewer is on
 
 ## Install the package
 
-The npm package is coming. The registry name is still open, so these commands wait on that decision.
-
 ```bash
-npm install -g vector
+npm install -g @blackdragon-tech/vector
 vector diagram.mmd
 ```
 
 Or without installing:
 
 ```bash
-npx vector diagram.mmd
+npx @blackdragon-tech/vector diagram.mmd
 ```
 
 The address prints to stdout. The page opens once with the file baked in, serves the view, then the process exits and the port closes. Missing, unreadable, and non `.mmd` paths fail named with exit 1.
@@ -118,7 +116,7 @@ The address prints to stdout. The page opens once with the file baked in, serves
 | Non `.mmd` path | Named error, exit 1 |
 | No argument | Usage, exit 1 |
 
-Package footprint is 5.5 MB unpacked with zero dependencies. Publishing waits on a registry name.
+Package footprint is 5.5 MB unpacked with zero dependencies.
 
 ## Test it
 
