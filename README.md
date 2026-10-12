@@ -2,9 +2,9 @@
 
 [![ci](https://github.com/SANIUL-blackdragon/VECTOR/actions/workflows/ci.yml/badge.svg)](https://github.com/SANIUL-blackdragon/VECTOR/actions)
 [![demo](https://img.shields.io/badge/try_it-live_demo-brightgreen)](https://saniul-blackdragon.github.io/VECTOR/VECTOR.html)
-[![license](https://img.shields.io/github/license/SANIUL-blackdragon/VECTOR)](LICENSE)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![issues](https://img.shields.io/github/issues/SANIUL-blackdragon/VECTOR)](https://github.com/SANIUL-blackdragon/VECTOR/issues)
-[![npm](https://img.shields.io/badge/npm_package-coming_soon-orange)](package.json)
+[![npm](https://img.shields.io/badge/npm-coming_soon-orange)](package.json)
 [![stars](https://img.shields.io/github/stars/SANIUL-blackdragon/VECTOR?style=social)](https://github.com/SANIUL-blackdragon/VECTOR)
 
 ![VECTOR logo](assets/images/logo/logo.png)
