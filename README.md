@@ -7,6 +7,28 @@
 
 One HTML file that renders `.mmd` diagrams offline. No server. No network. No install. Also ships as an npm package. Built for easy driving by agents: every control has a hook, the console tells the full story, and `window.VECTOR` takes source text.
 
+Try it live, no install: https://saniul-blackdragon.github.io/VECTOR/
+
+Figure 1 Ways in
+
+```mermaid
+flowchart TD
+  S([Start])
+  V[VECTOR.html renders diagrams]
+  H[/Human picks a local file/]
+  G[Agent calls VECTOR.render]
+  B[npx vector bakes and serves]
+  E([End])
+  S --> V
+  V --> H
+  V --> G
+  B --> V
+  H --> E
+  G --> E
+  classDef soft fill:#E3F2FD,stroke:#42A5F5,color:#111111
+  class S,V,H,G,B,E soft
+```
+
 ## Features
 
 - Opens any local `.mmd` file and renders the diagram with no size caps.
@@ -30,6 +52,23 @@ node --version
 ```
 
 The last line must print `v18` or later. Nothing else installs. The viewer is one file and the backend uses the standard library only.
+
+## Install the package
+
+The npm package is coming. The registry name is still open, so these commands wait on that decision.
+
+```bash
+npm install -g vector
+vector diagram.mmd
+```
+
+Or without installing:
+
+```bash
+npx vector diagram.mmd
+```
+
+The address prints to stdout. The page opens once with the file baked in, serves the view, then the process exits and the port closes. Missing, unreadable, and non `.mmd` paths fail named with exit 1.
 
 ## Use it
 
