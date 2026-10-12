@@ -1,61 +1,119 @@
 # VECTOR
 
+[![ci](https://github.com/SANIUL-blackdragon/VECTOR/actions/workflows/ci.yml/badge.svg)](https://github.com/SANIUL-blackdragon/VECTOR/actions)
+[![license](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 ![VECTOR logo](assets/images/logo/logo.png)
 
 One HTML file that renders `.mmd` diagrams offline. No server. No network. No install. Also ships as an npm package. Built for easy driving by agents: every control has a hook, the console tells the full story, and `window.VECTOR` takes source text.
 
-## Status
+## Features
 
-Built on `agent-sandbox`. `docs/spec.md` holds the plan as built. The idea is grilled and recorded in `CONTEXT.md` and `docs/adr/`.
+- Opens any local `.mmd` file and renders the diagram with no size caps.
+- Starts at readable text size with the first region in view. Giants crop instead of shrinking.
+- Pan, zoom, Fit, Reset, true size, and fullscreen from buttons or keys, with a live percent readout.
+- Warns before sources over 50000 chars render, with proceed and cancel.
+- Logs the full render story to structured console lines agents can read.
+- Backend bakes a file into the viewer, serves one view, then exits.
 
-## How it works
+## Requirements
 
-1. Open `VECTOR.html` in Chrome. It works with the network off.
-2. Pick any local `.mmd` file.
-3. The diagram opens at a readable text size with the first region in view. Drag to roam. Use the wheel or pinch to zoom, or the header buttons: pan arrows, zoom with live percent, Fit, Reset, true size, fullscreen.
-4. Fit shows the whole diagram. Reset returns to the readable default. Keys mirror every button.
-5. A bad file shows an error panel. Never a blank page.
-6. The page logs each step to structured console lines. Agents read the console to drive the viewer and debug diagrams.
-7. Every control carries a stable hook, so agent-browser drives it with no special setup. The picker takes file paths. `window.VECTOR` takes source text, with help, render, reset, fit, zoom, pan, and status calls.
-8. No size caps. Text and edge limits sit past any practical size, so giant diagrams render.
+- Chrome for the viewer.
+- Node.js 18 or later for the backend and the test suite. Zero npm dependencies.
 
-Figure 1 View
+## Install
 
-```mermaid
-flowchart TD
-  S([Start])
-  A[/Pick a local file/]
-  D{File ends with .mmd?}
-  R[Render diagram]
-  N[/Show error panel/]
-  P[Pan with drag, arrows, or keys, zoom with wheel or pinch]
-  V[Fit whole diagram, Reset for readable default]
-  E([End])
-  S --> A
-  A --> D
-  D -->|Yes| R
-  D -->|No| N
-  R --> P
-  P --> V
-  V --> E
-  N --> E
-  classDef soft fill:#E3F2FD,stroke:#42A5F5,color:#111111
-  class S,A,R,N,P,V,E soft
-  style D fill:#FCE4EC,stroke:#EC407A,color:#111111
+```bash
+git clone https://github.com/SANIUL-blackdragon/VECTOR.git
+cd VECTOR
+node --version
 ```
 
-## Non-goals
+The last line must print `v18` or later. Nothing else installs. The viewer is one file and the backend uses the standard library only.
 
-- No editing. No saving. Viewer only.
-- One file per view. No multi-file projects.
-- No server inside the solo HTML. Fully offline, fully local. The npm package backend is the only server, and it exits after one view.
+## Use it
 
-## Build notes
+Double-click `VECTOR.html`, or open it in Chrome with the network off. Pick any local `.mmd` file.
 
-- The mermaid library ships inlined inside the HTML file. It tracks the latest stable at build time, verified 12.1.0 on 2026-10-05. No promise to follow future mermaid releases.
-- The npm package runs a minuscule local backend, under 10 MB with zero dependencies. It reads the picked file, bakes its text into the viewer, then exits. Never idle.
-- `npx vector diagram.mmd` opens one diagram. Render-done means SVG in the page. Fit-to-screen reports its own console event.
-- Diagram node fills stay exactly as authored. The page never restyles diagram content.
+| Control | Button | Key |
+|---|---|---|
+| Zoom in and out | `+`, `-` | `+`, `-` |
+| Fit whole diagram | Fit | `0` |
+| Reset to readable default | Reset | `R` |
+| True size | `1:1` | `1` |
+| Pan | Arrow buttons | Arrow keys |
+| Fullscreen | Full | `F` |
+| Read zoom level | Percent readout | n/a |
+
+Drag roams. Wheel and pinch zoom around the cursor. A bad file names its failure in the error panel, never a blank page.
+
+## Drive it as an agent
+
+Paste `VECTOR.help()` in the dev console. It prints all eight calls.
+
+| Call | Effect |
+|---|---|
+| `await VECTOR.render(text)` | Renders source text, resolves when done |
+| `VECTOR.reset()` | Returns the readable default, returns status |
+| `VECTOR.fit()` | Shows the whole diagram, returns status |
+| `VECTOR.zoom(1.25)` | Zooms about the center, under 1 zooms out |
+| `VECTOR.pan(120, 0)` | Roams by pixels, right and down read positive |
+| `VECTOR.status()` | Returns state, diagram, scale, position, and file |
+
+Every call logs its own `api-*` console line. Every render logs file, timing, scale, and median. Parse errors name the failure in both the panel and the console. Agents driving the product load `skills/vector-driver/SKILL.md`.
+
+## Backend
+
+```bash
+node backend.js diagram.mmd
+```
+
+The address prints to stdout. The page opens once with the file baked in, serves the view, then the process exits and the port closes. Unknown paths return 404 without counting as the view.
+
+| Situation | Result |
+|---|---|
+| Valid `.mmd` path | Serves the baked diagram, exits after |
+| Missing file | Named error, exit 1 |
+| Non `.mmd` path | Named error, exit 1 |
+| No argument | Usage, exit 1 |
+
+Package footprint is 5.5 MB unpacked with zero dependencies. Publishing waits on a registry name.
+
+## Test it
+
+```bash
+node tests/agent/suite.js
+```
+
+Sixteen checks run headless on isolated sessions: open, pick, zoom, pan, reset, fit, bad file, warn flow, a 680 box render, console contract, offline render with all network blocked, and backend serve plus clean exit. Green means the contract holds. Fixtures live in `tests/fixtures`.
+
+## Project files
+
+```text
+VECTOR.html          Solo viewer, mermaid 12.1.0 inlined
+backend.js           Minuscule local server, standard library only
+package.json         Package manifest with the vector binary
+tests/agent/         Headless acceptance suite
+tests/fixtures/      Tiny, broken, and wrong-extension fixtures
+docs/spec.md         Plan as built
+docs/adr/            Architecture decision records
+docs/agents/         Issue tracker, labels, and domain notes
+CONTEXT.md           Glossary, state, contracts, lessons
+```
+
+## When it breaks
+
+- Giant render blocks the tab for a couple of minutes. The warn panel says so first. Wait it out or cancel.
+- A `file:` origin frame warning in the console on direct file open. Browser noise from inside the mermaid bundle. The render completes anyway.
+- A local fixture fails to parse while another copy renders. `testing/` is gitignored and copies drift. Confirm the fixture before trusting proof.
+
+## Roadmap
+
+Open work lives in GitHub issues: #1 build spec and #8 giant render performance. Everything else is closed.
+
+## Contribute
+
+File issues on GitHub. Work stays on the `agent-sandbox` branch. Write detailed conventional commit messages, one concern per commit.
 
 ## License
 
