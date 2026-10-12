@@ -7,7 +7,7 @@
 
 One HTML file that renders `.mmd` diagrams offline. No server. No network. No install. Also ships as an npm package. Built for easy driving by agents: every control has a hook, the console tells the full story, and `window.VECTOR` takes source text.
 
-Try it live, no install: https://saniul-blackdragon.github.io/VECTOR/
+Try it live, no install: https://saniul-blackdragon.github.io/VECTOR/VECTOR.html
 
 Figure 1 Ways in
 
