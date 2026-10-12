@@ -1,6 +1,6 @@
-# VECTOR - Offline mmd renderer (rough plan, build held)
+# VECTOR - Offline mmd renderer (built)
 
-Status: rough. Recorded 2026-09-28, revised and grilled 2026-10-05. Build starts only when Sir says go.
+Status: built on `agent-sandbox`. Recorded 2026-09-28, revised and grilled 2026-10-05, built 2026-10-07 through 2026-10-12.
 Designed under the frontend-design skill at build time.
 Renderer uses the latest mermaid stable at build time, verified 12.1.0 on 2026-10-05. No promise to follow future mermaid releases.
 
@@ -17,11 +17,18 @@ no install.
 - If the picked file is an `.mmd` file, it renders the diagram with
   no size constraints, no matter how gigantic.
 - Shows the rendered output only. The mermaid source stays hidden.
-- Pan with drag, zoom with wheel or pinch, as far in or out as needed.
-- Reset view button returns to fit-to-screen.
-- Works under agent-browser out of the box. Picker, canvas, reset button, and error panel each carry a stable hook for automation.
-- Speaks to agents two ways. The picker takes file paths through automation upload. `window.VECTOR` takes source text, with render, reset, and status calls.
-- Logs the full render story to structured console lines: file picked, render start, render done, and render errors with the failure named. Agents read the console to drive the viewer and to debug broken `.mmd` files.
+- Opens at a readable text size with the first region cropped at the
+  top left. Drag to roam with pan clamp, wheel or pinch
+  to zoom from 10 percent to 800 percent around the cursor.
+- Plus and minus zoom about the center with a live percent readout.
+  Fit shows the whole diagram. Reset returns to the readable default.
+  True size sets scale 1. Pan arrows roam in fixed steps. Full
+  shortens giant inspection to one click. Keys mirror every button:
+  plus, minus, 0 for fit, 1 for true size, R for reset, F for
+  fullscreen, arrows for pan.
+- Works under agent-browser out of the box. Picker, canvas, every button, readout, warn panel, and error panel each carry a stable hook for automation.
+- Speaks to agents two ways. The picker takes file paths through automation upload. `window.VECTOR` takes source text, with help, render, reset, fit, zoom, pan, and status calls.
+- Logs the full render story to structured console lines: file picked, render start, render done, fit completion, warn flow, errors with the failure named, and every API call. Agents read the console to drive the viewer and to debug broken `.mmd` files.
 - Renders without limits. Text and edge caps sit past any practical size, so giant diagrams render. Failures land in the error panel either way.
 
 ## How it holds together, roughly
@@ -31,8 +38,8 @@ no install.
   pulled.
 - The picker is a plain file input. The user gesture grants access,
   the page reads the text, hands it to the inlined renderer.
-- The renderer emits SVG. Pan and zoom ride on the SVG viewBox, so
-  all 680 boxes stay sharp at any depth.
+- The renderer emits SVG. Pan and zoom ride on a GPU transform over
+  the SVG, so all 680 boxes stay sharp at any depth.
 - Render failures show a plain error panel naming the failure,
   never a blank page. The same failure also goes to the console
   log, so agents see it through devtools.

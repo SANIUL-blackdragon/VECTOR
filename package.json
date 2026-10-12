@@ -1,0 +1,34 @@
+{
+  "name": "@blackdragon-tech/vector",
+  "version": "0.1.0",
+  "description": "Offline .mmd diagram viewer: one self-contained HTML file plus a minuscule local backend.",
+  "keywords": [
+    "mermaid",
+    "diagram",
+    "flowchart",
+    "offline",
+    "viewer"
+  ],
+  "homepage": "https://github.com/SANIUL-blackdragon/VECTOR#readme",
+  "bugs": {
+    "url": "https://github.com/SANIUL-blackdragon/VECTOR/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SANIUL-blackdragon/VECTOR.git"
+  },
+  "author": "SANIUL-blackdragon",
+  "bin": {
+    "vector": "./backend.js"
+  },
+  "files": [
+    "backend.js",
+    "VECTOR.html",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
