@@ -5141,6 +5141,20 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     viewer.render(String(window.__VECTOR_BAKED));
   }
   window.VECTOR = {
+    help: function () {
+      var lines = [
+        'VECTOR console API:',
+        '  VECTOR.render(text)  render source text, returns a promise',
+        '  VECTOR.reset()       back to the readable default, returns status',
+        '  VECTOR.fit()         show the whole diagram, returns status',
+        '  VECTOR.zoom(factor)  zoom about the center, 1.25 in, 0.8 out',
+        '  VECTOR.pan(dx, dy)   roam by pixels, right and down positive',
+        '  VECTOR.status()      state, diagram, scale, x, y, file',
+        '  VECTOR.help()        this text'
+      ];
+      console.log('[VECTOR] event=api-help');
+      return lines.join('\n');
+    },
     render: function (source) {
       var text = String(source);
       console.log('[VECTOR] event=api-render source-chars=' + text.length);
@@ -5150,6 +5164,26 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     reset: function () {
       console.log('[VECTOR] event=api-reset');
       viewer.defaultView();
+      return viewer.status();
+    },
+    fit: function () {
+      console.log('[VECTOR] event=api-fit');
+      viewer.fitView();
+      return viewer.status();
+    },
+    zoom: function (factor) {
+      var f = Number(factor);
+      if (!isFinite(f) || f <= 0) {
+        console.log('[VECTOR] event=api-zoom error="bad-factor"');
+        return viewer.status();
+      }
+      console.log('[VECTOR] event=api-zoom factor=' + f);
+      viewer.zoomCenter(f);
+      return viewer.status();
+    },
+    pan: function (dx, dy) {
+      console.log('[VECTOR] event=api-pan dx=' + dx + ' dy=' + dy);
+      viewer.panBy(Number(dx) || 0, Number(dy) || 0);
       return viewer.status();
     },
     status: function () {
