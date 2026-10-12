@@ -4636,12 +4636,26 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     return (heights[mid - 1] + heights[mid]) / 2;
   };
 
+  Viewer.prototype.normalizeSvgSize = function () {
+    var svg = this.canvas.querySelector('svg');
+    if (!svg) {
+      return;
+    }
+    var vb = svg.viewBox && svg.viewBox.baseVal;
+    if (vb && vb.width > 0 && vb.height > 0) {
+      svg.style.maxWidth = 'none';
+      svg.style.width = vb.width + 'px';
+      svg.style.height = vb.height + 'px';
+    }
+  };
+
   Viewer.prototype.defaultView = function () {
     var svg = this.canvas.querySelector('svg');
     if (!svg) {
       return;
     }
     svg.style.transform = 'none';
+    this.normalizeSvgSize();
     var median = this.measureMedianText();
     var scale = 1;
     if (median > 0) {
@@ -4661,6 +4675,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
       return;
     }
     svg.style.transform = 'none';
+    this.normalizeSvgSize();
     var r = svg.getBoundingClientRect();
     var w = r.width, h = r.height;
     if (!(w > 0) || !(h > 0)) {
@@ -4679,7 +4694,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
       return this.defaultView();
     }
     var scale = Math.min(availW / w, availH / h);
-    scale = Math.min(this.maxScale, Math.max(this.minScale, scale));
+    scale = Math.min(this.maxScale, Math.max(0.001, scale));
     var base = this.getBase();
     this.view = {
       scale: scale,
