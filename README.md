@@ -2,7 +2,7 @@
 
 ![VECTOR logo](assets/images/logo/logo.png)
 
-One HTML file that renders `.mmd` diagrams offline. No server. No network. No install. Also ships as an npm package.
+One HTML file that renders `.mmd` diagrams offline. No server. No network. No install. Also ships as an npm package. Built for easy driving by agents: every control has a hook, the console tells the full story, and `window.VECTOR` takes source text.
 
 ## Status
 
