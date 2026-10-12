@@ -4546,6 +4546,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
  for(i=0;i<3;i++)E('path',{d:'M'+(sx-10+i*10)+' 150q-6-8 0-16'},s,'fa st').style.animationDelay=(-i*.8)+'s';
  g=E('g',{},s);O(g,lx,ly,'ar');E('line',{x1:lx,y1:ly,x2:lx+62,y2:ly},g,'ln');E('circle',{cx:lx+66,cy:ly,r:5},g,'am');E('circle',{cx:lx,cy:ly,r:4},s,'am')}
 </script>
+<!--VECTOR_BAKED-->
 <script>
 (function () {
   'use strict';
@@ -5071,7 +5072,9 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
   picker.addEventListener('change', function () {
     viewer.pick(picker.files && picker.files[0]);
   });
-
+  if (window.__VECTOR_BAKED) {
+    viewer.render(String(window.__VECTOR_BAKED));
+  }
   window.VECTOR = {
     render: function (source) {
       var text = String(source);

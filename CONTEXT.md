@@ -36,7 +36,7 @@ Write detailed commit messages. Use conventional commits for the title, for exam
 
 ## Product state
 
-The solo Viewer works. A human opens `VECTOR.html`, picks a file, pans and zooms. These parts do not exist yet: the Backend and npm package, the `window.VECTOR` API, structured console lines, the agent-browser suite. Build them per the open issues below.
+The solo Viewer works. A human opens `VECTOR.html`, picks a file, pans and zooms. The solo Viewer, the agent contract, and the Backend exist. Still missing: the agent-browser acceptance suite. Build it per the open issues below.
 
 ## Open issues
 

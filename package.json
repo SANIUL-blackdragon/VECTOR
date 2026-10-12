@@ -1,0 +1,18 @@
+{
+  "name": "vector",
+  "version": "0.1.0",
+  "description": "Offline .mmd diagram viewer: one self-contained HTML file plus a minuscule local backend.",
+  "bin": {
+    "vector": "./backend.js"
+  },
+  "files": [
+    "backend.js",
+    "VECTOR.html",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
