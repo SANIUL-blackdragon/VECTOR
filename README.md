@@ -1,6 +1,6 @@
 # VECTOR
 
-<a href="https://github.com"><img src="https://shields.io" alt="Version 0.1.0"></a>
+[![version](https://shields.io)](https://github.com)
 [![ci](https://github.com/SANIUL-blackdragon/VECTOR/actions/workflows/ci.yml/badge.svg)](https://github.com/SANIUL-blackdragon/VECTOR/actions)
 [![demo](https://img.shields.io/badge/try_it-live_demo-brightgreen)](https://saniul-blackdragon.github.io/VECTOR/VECTOR.html)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
