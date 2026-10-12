@@ -81,7 +81,7 @@
   #stage.live { cursor: grab; }
   #stage.dragging { cursor: grabbing; }
   #stage.dragging #canvas { pointer-events: none; }
-  .zoombar { display: flex; gap: 0.3rem; }
+  .zoombar { display: flex; gap: 0.3rem; align-items: center; }
   .zoombar button {
     font-family: inherit;
     background: transparent;
@@ -94,6 +94,12 @@
   .zoombar button:hover {
     background: var(--coffee-accent);
     color: var(--coffee-bg);
+  }
+  .zoomlevel {
+    color: var(--coffee-dim);
+    min-width: 3.5rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
   }
   #error-panel {
     margin: 1rem;
@@ -148,9 +154,17 @@
   <h1>VECTOR</h1>
   <input type="file" data-testid="picker" accept=".mmd" aria-label="Pick an .mmd file">
   <span class="zoombar" role="group" aria-label="View controls">
+    <button type="button" data-testid="pan-left" aria-label="Pan left">&#8592;</button>
+    <button type="button" data-testid="pan-up" aria-label="Pan up">&#8593;</button>
+    <button type="button" data-testid="pan-down" aria-label="Pan down">&#8595;</button>
+    <button type="button" data-testid="pan-right" aria-label="Pan right">&#8594;</button>
     <button type="button" data-testid="zoom-out" aria-label="Zoom out">-</button>
-    <button type="button" data-testid="reset-view" aria-label="Reset view">Fit</button>
+    <span class="zoomlevel" data-testid="zoom-level" role="status" aria-live="polite" aria-label="Zoom level">100%</span>
     <button type="button" data-testid="zoom-in" aria-label="Zoom in">+</button>
+    <button type="button" data-testid="reset-view" aria-label="Fit whole diagram">Fit</button>
+    <button type="button" data-testid="reset-default" aria-label="Reset to readable default">Reset</button>
+    <button type="button" data-testid="zoom-one" aria-label="True size, one to one">1:1</button>
+    <button type="button" data-testid="fullscreen" aria-label="Toggle fullscreen">Full</button>
   </span>
   <span class="hint">Offline viewer. Your file never leaves this machine.</span>
 </header>
@@ -4538,6 +4552,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
 
   var SVG_ID = 'vector-svg';
   var PAINT_MS = 50;
+  var PAN_STEP = 120;
 
   function Viewer(stage, canvas, panel) {
     this.stage = stage;
@@ -4584,6 +4599,14 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     }
     svg.style.transformOrigin = '0 0';
     svg.style.transform = 'translate(' + this.view.x + 'px,' + this.view.y + 'px) scale(' + this.view.scale + ')';
+    this.updateReadout();
+  };
+
+  Viewer.prototype.updateReadout = function () {
+    var el = document.querySelector('[data-testid="zoom-level"]');
+    if (el) {
+      el.textContent = Math.round(this.view.scale * 100) + '%';
+    }
   };
 
   Viewer.prototype.resetView = function () {
@@ -4756,6 +4779,37 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     this.zoomAt(room.width / 2, room.height / 2, factor);
   };
 
+  Viewer.prototype.panBy = function (dx, dy) {
+    if (!this.hasDiagram()) {
+      return;
+    }
+    this.view.x += dx;
+    this.view.y += dy;
+    this.applyView();
+    this.clampPan();
+  };
+
+  Viewer.prototype.oneToOne = function () {
+    if (!this.hasDiagram()) {
+      return;
+    }
+    var room = this.stage.getBoundingClientRect();
+    this.zoomAt(room.width / 2, room.height / 2, 1 / this.view.scale);
+  };
+
+  Viewer.prototype.toggleFullscreen = function () {
+    try {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else if (this.stage.requestFullscreen) {
+        this.stage.requestFullscreen();
+      } else if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+    } catch (fsErr) {
+    }
+  };
+
   Viewer.prototype.bindView = function () {
     var self = this;
     var pointers = {};
@@ -4845,6 +4899,80 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     document.querySelector('[data-testid="reset-view"]').addEventListener('click', function () {
       if (self.hasDiagram()) {
         self.fitView();
+      }
+    });
+    document.querySelector('[data-testid="reset-default"]').addEventListener('click', function () {
+      if (self.hasDiagram()) {
+        self.defaultView();
+      }
+    });
+    document.querySelector('[data-testid="zoom-one"]').addEventListener('click', function () {
+      self.oneToOne();
+    });
+    document.querySelector('[data-testid="fullscreen"]').addEventListener('click', function () {
+      self.toggleFullscreen();
+    });
+    document.querySelector('[data-testid="pan-left"]').addEventListener('click', function () {
+      self.panBy(PAN_STEP, 0);
+    });
+    document.querySelector('[data-testid="pan-right"]').addEventListener('click', function () {
+      self.panBy(-PAN_STEP, 0);
+    });
+    document.querySelector('[data-testid="pan-up"]').addEventListener('click', function () {
+      self.panBy(0, PAN_STEP);
+    });
+    document.querySelector('[data-testid="pan-down"]').addEventListener('click', function () {
+      self.panBy(0, -PAN_STEP);
+    });
+    document.addEventListener('keydown', function (e) {
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) {
+        return;
+      }
+      if (!self.hasDiagram()) {
+        return;
+      }
+      var handled = true;
+      switch (e.key) {
+        case '+':
+        case '=':
+          self.zoomCenter(1.25);
+          break;
+        case '-':
+        case '_':
+          self.zoomCenter(0.8);
+          break;
+        case '0':
+          self.fitView();
+          break;
+        case '1':
+          self.oneToOne();
+          break;
+        case 'r':
+        case 'R':
+          self.defaultView();
+          break;
+        case 'f':
+        case 'F':
+          self.toggleFullscreen();
+          break;
+        case 'ArrowLeft':
+          self.panBy(PAN_STEP, 0);
+          break;
+        case 'ArrowRight':
+          self.panBy(-PAN_STEP, 0);
+          break;
+        case 'ArrowUp':
+          self.panBy(0, PAN_STEP);
+          break;
+        case 'ArrowDown':
+          self.panBy(0, -PAN_STEP);
+          break;
+        default:
+          handled = false;
+      }
+      if (handled) {
+        e.preventDefault();
       }
     });
   };

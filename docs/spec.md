@@ -20,8 +20,12 @@ no install.
 - Opens at a readable text size with the first region cropped at the
   top left. Drag to roam with pan clamp, wheel or pinch
   to zoom from 10 percent to 800 percent around the cursor.
-- Plus and minus zoom about the center. Fit shows the whole diagram.
-  Re-pick returns to the readable default.
+- Plus and minus zoom about the center with a live percent readout.
+  Fit shows the whole diagram. Reset returns to the readable default.
+  True size sets scale 1. Pan arrows roam in fixed steps. Full
+  shortens giant inspection to one click. Keys mirror every button:
+  plus, minus, 0 for fit, 1 for true size, R for reset, F for
+  fullscreen, arrows for pan.
 - Works under agent-browser out of the box. Picker, canvas, reset button, and error panel each carry a stable hook for automation.
 - Speaks to agents two ways. The picker takes file paths through automation upload. `window.VECTOR` takes source text, with render, reset, and status calls.
 - Logs the full render story to structured console lines: file picked, render start, render done, and render errors with the failure named. Agents read the console to drive the viewer and to debug broken `.mmd` files.
