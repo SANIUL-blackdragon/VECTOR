@@ -4873,6 +4873,8 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
   };
 
   Viewer.prototype.render = async function (source) {
+    var t0 = performance.now();
+    console.log('[VECTOR] render start, Source ' + source.length + ' chars');
     this.setState('rendering');
     this.paintWorking();
     await new Promise(function (done) {
@@ -4880,8 +4882,10 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     });
     try {
       var result = await mermaid.render(SVG_ID, source);
+      console.log('[VECTOR] render done in ' + Math.round(performance.now() - t0) + ' ms, svg ' + result.svg.length + ' chars');
       this.show(result.svg);
     } catch (err) {
+      console.log('[VECTOR] render failed after ' + Math.round(performance.now() - t0) + ' ms: ' + (err && err.message ? err.message : String(err)));
       this.fail('Render failed: ' + (err && err.message ? err.message : String(err)));
     }
   };
