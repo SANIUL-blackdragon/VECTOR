@@ -1,6 +1,6 @@
-# VECTOR - Offline mmd renderer (rough plan, build held)
+# VECTOR - Offline mmd renderer (built)
 
-Status: rough. Recorded 2026-09-28, revised and grilled 2026-10-05. Build starts only when Sir says go.
+Status: built on `agent-sandbox`. Recorded 2026-09-28, revised and grilled 2026-10-05, built 2026-10-07 through 2026-10-12.
 Designed under the frontend-design skill at build time.
 Renderer uses the latest mermaid stable at build time, verified 12.1.0 on 2026-10-05. No promise to follow future mermaid releases.
 
@@ -26,9 +26,9 @@ no install.
   shortens giant inspection to one click. Keys mirror every button:
   plus, minus, 0 for fit, 1 for true size, R for reset, F for
   fullscreen, arrows for pan.
-- Works under agent-browser out of the box. Picker, canvas, reset button, and error panel each carry a stable hook for automation.
-- Speaks to agents two ways. The picker takes file paths through automation upload. `window.VECTOR` takes source text, with render, reset, and status calls.
-- Logs the full render story to structured console lines: file picked, render start, render done, and render errors with the failure named. Agents read the console to drive the viewer and to debug broken `.mmd` files.
+- Works under agent-browser out of the box. Picker, canvas, every button, readout, warn panel, and error panel each carry a stable hook for automation.
+- Speaks to agents two ways. The picker takes file paths through automation upload. `window.VECTOR` takes source text, with help, render, reset, fit, zoom, pan, and status calls.
+- Logs the full render story to structured console lines: file picked, render start, render done, fit completion, warn flow, errors with the failure named, and every API call. Agents read the console to drive the viewer and to debug broken `.mmd` files.
 - Renders without limits. Text and edge caps sit past any practical size, so giant diagrams render. Failures land in the error panel either way.
 
 ## How it holds together, roughly

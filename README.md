@@ -6,9 +6,9 @@ One HTML file that renders `.mmd` diagrams offline. No server. No network. No in
 
 ## Status
 
-Spec stage. `docs/spec.md` holds the plan. The idea is grilled and recorded in `CONTEXT.md` and `docs/adr/`. The viewer file is not in this repo yet.
+Built on `agent-sandbox`. `docs/spec.md` holds the plan as built. The idea is grilled and recorded in `CONTEXT.md` and `docs/adr/`.
 
-## How it will work
+## How it works
 
 1. Open `VECTOR.html` in Chrome. It works with the network off.
 2. Pick any local `.mmd` file.
@@ -16,7 +16,7 @@ Spec stage. `docs/spec.md` holds the plan. The idea is grilled and recorded in `
 4. Fit shows the whole diagram. Reset returns to the readable default. Keys mirror every button.
 5. A bad file shows an error panel. Never a blank page.
 6. The page logs each step to structured console lines. Agents read the console to drive the viewer and debug diagrams.
-7. Every control carries a stable hook, so agent-browser drives it with no special setup. The picker takes file paths. `window.VECTOR` takes source text.
+7. Every control carries a stable hook, so agent-browser drives it with no special setup. The picker takes file paths. `window.VECTOR` takes source text, with help, render, reset, fit, zoom, pan, and status calls.
 8. No size caps. Text and edge limits sit past any practical size, so giant diagrams render.
 
 Figure 1 View
@@ -48,7 +48,7 @@ flowchart TD
 
 - No editing. No saving. Viewer only.
 - One file per view. No multi-file projects.
-- No server half. Fully offline, fully local.
+- No server inside the solo HTML. Fully offline, fully local. The npm package backend is the only server, and it exits after one view.
 
 ## Build notes
 

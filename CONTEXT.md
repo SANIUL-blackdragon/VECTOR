@@ -36,42 +36,43 @@ Write detailed commit messages. Use conventional commits for the title, for exam
 
 ## Product state
 
-The solo Viewer works. A human opens `VECTOR.html`, picks a file, pans and zooms. The solo Viewer, the agent contract, the Backend, and the acceptance suite exist. Remaining: giant render performance.
+The solo Viewer, the agent contract, the Backend, the acceptance suite, and the console API exist. Remaining: giant render performance.
 
 ## Open issues
 
 - #1 VECTOR build spec. The parent plan. 19 user stories. Read it first.
-- #4 Agent contract. Stable hooks, console lines, `window.VECTOR` trio of render, reset, status.
-- #6 Backend package. `npx vector diagram.mmd`, under 10 MB, zero deps, exits after serving.
-- #7 Acceptance sweep. Full agent-browser suite plus offline check plus giant warn path.
 - #8 Render the entire file, never cap, never crash. Progress feedback during long renders.
-- #13 Viewer zoom default. Read the dossier below. Closest to done, still open.
 
-Closed: #2 skeleton, #3 pan zoom reset, #5 giant guard, #10 CI, #11 size, #12 health.
+Closed: #2 skeleton, #3 pan zoom reset, #4 agent contract, #5 giant guard, #6 backend package, #7 acceptance sweep, #10 CI, #11 size, #12 health, #13 zoom default, #14 console API.
 
-## Issue 13 dossier
+## Issue 13 dossier, closed
+
+The default view opens body text at 14 to 16 px, cropped at top left. Fit stays behind the Fit button only. Zoom anchors under the cursor. Pan never loses the diagram. Same rule for every file.
+
+History: `b5f0b36` set scale 1. `618c7038` set fit width capped at double. Both closed the issue and both reopen screenshots refuted. `600ef08` split default from Fit, fixed the zoom pivot with the canvas base term, and clamped pan. `d97a28f` extended the sampler to HTML labels. `ddd317f` spread sampling with oversize skip. `80e8fbf` found the true cause: mermaid squeezes the svg to stage width, so measurement now happens at authored size. The control deck, readout, keys, and console story landed after. Sir verified the console math live and closed the issue.
 
 The default view must open body text at 14 to 16 px, cropped at top left. Fit stays behind the Fit button only. Zoom anchors under the cursor. Pan never loses the diagram. Same rule for every file.
 
 History: `b5f0b36` set scale 1. `618c7038` set fit width capped at double. Both closed the issue and both reopen screenshots refuted. `600ef08` split default from Fit, fixed the zoom pivot with the canvas base term, and clamped pan. `d97a28f` extended the sampler to HTML labels.
 
-Mermaid flowcharts emit zero svg `text` nodes. All labels are HTML inside `foreignObject`, so the sampler must read `.label`, `.nodeLabel`, and `.edgeLabel`. This is proven live. `test.1.mmd` now opens readable.
-
-`test.2.mmd` still opens tiny. It is a generated flowchart with 8687 lines, about 1500 nodes, 4504 edges, 29 subgraphs, uniform default fonts. Prime suspect, unconfirmed: the sampler reads the first 60 matches in document order, which oversamples one corner of a giant DOM plus large container boxes. Fix direction is spread sampling across the whole document with oversized boxes skipped. Same 60 budget, same target, same clamp.
+Mermaid flowcharts emit zero svg `text` nodes. All labels are HTML inside `foreignObject`, so the sampler reads `.label`, `.nodeLabel`, and `.edgeLabel`, spread across the document with oversized boxes skipped. This is proven live.
 
 ## Viewer architecture
 
-All viewer logic lives in `VECTOR.html` in one `Viewer` object near the end of the file, past the inlined mermaid bundle. Never read the bundle wholesale. Key methods at `d97a28f`:
+All viewer logic lives in `VECTOR.html` in one `Viewer` object near the end of the file, past the inlined mermaid bundle. Never read the bundle wholesale. Current methods:
 
 - `show` renders then calls `defaultView`.
-- `defaultView` clears the transform, measures median label height, scales 15 over median clamped 0.1 to 8, anchors top left.
+- `defaultView` normalizes the svg to authored size, measures median label height, scales 15 over median clamped 0.1 to 8, anchors top left.
 - `fitView` fits both measured dimensions and centers. The Fit button calls it.
-- `resetView` is an alias of `defaultView`.
+- `resetView` is an alias of `defaultView`. The Reset button calls it.
+- `oneToOne` re-anchors stage center at scale 1. `panBy` roams with clamp. `toggleFullscreen` fills the screen.
 - `zoomAt` anchors on the measured canvas base so the node under the cursor stays put.
 - `clampPan` keeps part of the diagram on stage.
-- `measureMedianText` samples up to 60 visible label boxes in document order.
+- `measureMedianText` samples up to 60 visible label boxes spread across the document.
+- `confirmGiant` pauses sources over 50000 chars on a warn panel.
+- `status` reports state, diagram, scale, position, and file.
 
-Stable hooks: `picker`, `canvas`, `zoom-in`, `zoom-out`, `reset-view`, `error-panel`. Keep every hook. No `window.VECTOR` exists yet. No structured console lines exist yet.
+Stable hooks: `picker`, `canvas`, pan arrows, zoom in and out, readout, Fit, Reset, true size, fullscreen, warn panel with proceed and cancel, error panel. `window.VECTOR` carries `help`, `render`, `reset`, `fit`, `zoom`, `pan`, and `status`.
 
 ## Fixtures and CI
 
@@ -85,4 +86,4 @@ Every console line starts `[VECTOR] event=<name>` with `key=value` pairs after i
 
 ## Verification lessons
 
-Drive the real page, not guesses. The picker accepts files through automation upload, or set its files with `DataTransfer` in `eval` and dispatch `change`. Prefer `eval -b` with base64 over stdin pipes. Read aggregate DOM stats such as counts and medians, never full dumps. Cap browser work: if two steps fail in a row, stop and replan. Never commit diagnosis write-ups or skill copies. `issue-*/` and `.skills/` stay gitignored.
+Verify against the real page, not guesses. Browser work runs headless on isolated sessions under agent-browser's own Chromium, never the human window or profile, never headed. Kill leftover sessions when done and confirm zero agent processes. Prefer `eval -b` with base64 over stdin pipes. Read aggregate DOM stats such as counts and medians, never full dumps. Heavy renders run once per task announced first, never on a loop. The eval channel double encodes JSON strings, so unwrap repeatedly before comparing numbers. Never commit diagnosis write-ups or skill copies. `issue-*/` and `.skills/` stay gitignored.
