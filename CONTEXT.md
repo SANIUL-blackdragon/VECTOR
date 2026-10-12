@@ -79,6 +79,10 @@ Stable hooks: `picker`, `canvas`, `zoom-in`, `zoom-out`, `reset-view`, `error-pa
 
 CI runs three jobs on `main` and `agent-sandbox`: offline guarantee with no external refs, mermaid 12.1.0 pin marker, contract hooks plus `mermaid.initialize` present. Keep all three green.
 
+## Agent contract
+
+Every console line starts `[VECTOR] event=<name>` with `key=value` pairs after it. Locked names: `file-picked`, `file-read`, `file-rejected`, `render-start`, `render-done`, `render-failed`, `view-default`, `view-fit`, `error-shown`, `api-render`, `api-reset`, `api-status`, `fullscreen`. `window.VECTOR` carries three calls: `render` takes source text and returns the render promise, `reset` returns the readable default and returns status, `status` returns state, diagram presence, scale, position, and file. Stable hooks cover picker, canvas, all eleven buttons, readout, and error panel.
+
 ## Verification lessons
 
 Drive the real page, not guesses. The picker accepts files through automation upload, or set its files with `DataTransfer` in `eval` and dispatch `change`. Prefer `eval -b` with base64 over stdin pipes. Read aggregate DOM stats such as counts and medians, never full dumps. Cap browser work: if two steps fail in a row, stop and replan. Never commit diagnosis write-ups or skill copies. `issue-*/` and `.skills/` stay gitignored.

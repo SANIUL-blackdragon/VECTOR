@@ -4559,6 +4559,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     this.canvas = canvas;
     this.panel = panel;
     this.state = 'idle';
+    this.fileName = null;
     this.view = { scale: 1, x: 0, y: 0 };
     this.minScale = 0.1;
     this.maxScale = 8;
@@ -4570,6 +4571,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
   };
 
   Viewer.prototype.fail = function (message) {
+    console.log('[VECTOR] event=error-shown message="' + message + '"');
     this.setState('error');
     this.canvas.innerHTML = '';
     this.stage.classList.add('empty');
@@ -4590,6 +4592,17 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
 
   Viewer.prototype.hasDiagram = function () {
     return !!this.canvas.querySelector('svg');
+  };
+
+  Viewer.prototype.status = function () {
+    return {
+      state: this.state,
+      hasDiagram: this.hasDiagram(),
+      scale: Math.round(this.view.scale * 10000) / 10000,
+      x: Math.round(this.view.x),
+      y: Math.round(this.view.y),
+      file: this.fileName || null
+    };
   };
 
   Viewer.prototype.applyView = function () {
@@ -4688,6 +4701,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     var base = this.getBase();
     var pad = this.getPad();
     this.view = { scale: scale, x: pad.x - base.x, y: pad.y - base.y };
+    console.log('[VECTOR] event=view-default scale=' + (Math.round(scale * 10000) / 10000) + ' median=' + (Math.round(median * 10) / 10));
     this.applyView();
     this.clampPan();
   };
@@ -4724,6 +4738,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
       x: (room.width - w * scale) / 2 - base.x,
       y: (room.height - h * scale) / 2 - base.y
     };
+    console.log('[VECTOR] event=view-fit scale=' + (Math.round(scale * 10000) / 10000));
     this.applyView();
   };
 
@@ -4801,10 +4816,13 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     try {
       if (document.fullscreenElement) {
         document.exitFullscreen();
+        console.log('[VECTOR] event=fullscreen on=false');
       } else if (this.stage.requestFullscreen) {
         this.stage.requestFullscreen();
+        console.log('[VECTOR] event=fullscreen on=true');
       } else if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen();
+        console.log('[VECTOR] event=fullscreen on=true');
       }
     } catch (fsErr) {
     }
@@ -5002,7 +5020,7 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
 
   Viewer.prototype.render = async function (source) {
     var t0 = performance.now();
-    console.log('[VECTOR] render start, Source ' + source.length + ' chars');
+    console.log('[VECTOR] event=render-start source-chars=' + source.length);
     this.setState('rendering');
     this.paintWorking();
     await new Promise(function (done) {
@@ -5010,10 +5028,10 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
     });
     try {
       var result = await mermaid.render(SVG_ID, source);
-      console.log('[VECTOR] render done in ' + Math.round(performance.now() - t0) + ' ms, svg ' + result.svg.length + ' chars');
+      console.log('[VECTOR] event=render-done ms=' + Math.round(performance.now() - t0) + ' svg-chars=' + result.svg.length);
       this.show(result.svg);
     } catch (err) {
-      console.log('[VECTOR] render failed after ' + Math.round(performance.now() - t0) + ' ms: ' + (err && err.message ? err.message : String(err)));
+      console.log('[VECTOR] event=render-failed ms=' + Math.round(performance.now() - t0) + ' error="' + (err && err.message ? err.message : String(err)) + '"');
       this.fail('Render failed: ' + (err && err.message ? err.message : String(err)));
     }
   };
@@ -5021,16 +5039,23 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
   Viewer.prototype.pick = async function (file) {
     this.setState('picked');
     if (!file) {
+      console.log('[VECTOR] event=file-rejected reason=no-file');
       this.fail('No file picked.');
       return;
     }
     if (!/\.mmd$/i.test(file.name)) {
+      console.log('[VECTOR] event=file-rejected reason=bad-extension name="' + file.name + '"');
       this.fail('Not a diagram file: "' + file.name + '" is not an .mmd file.');
       return;
     }
+    console.log('[VECTOR] event=file-picked name="' + file.name + '"');
+    this.fileName = file.name;
     try {
-      await this.render(await this.read(file));
+      var source = await this.read(file);
+      console.log('[VECTOR] event=file-read name="' + file.name + '" source-chars=' + source.length);
+      await this.render(source);
     } catch (err) {
+      console.log('[VECTOR] event=render-failed error="' + (err && err.message ? err.message : String(err)) + '"');
       this.fail(err.message);
     }
   };
@@ -5046,6 +5071,25 @@ function mach(id,trains){var s=document.getElementById(id),g,gx=112,gy=70,hx=156
   picker.addEventListener('change', function () {
     viewer.pick(picker.files && picker.files[0]);
   });
+
+  window.VECTOR = {
+    render: function (source) {
+      var text = String(source);
+      console.log('[VECTOR] event=api-render source-chars=' + text.length);
+      viewer.fileName = null;
+      return viewer.render(text);
+    },
+    reset: function () {
+      console.log('[VECTOR] event=api-reset');
+      viewer.defaultView();
+      return viewer.status();
+    },
+    status: function () {
+      var s = viewer.status();
+      console.log('[VECTOR] event=api-status state=' + s.state + ' scale=' + s.scale + ' x=' + s.x + ' y=' + s.y + ' diagram=' + s.hasDiagram + ' file=' + (s.file === null ? 'none' : '"' + s.file + '"'));
+      return s;
+    }
+  };
 })();
 </script>
 </body>
